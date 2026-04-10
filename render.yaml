@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: skillsight
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: SECRET_KEY
+        value: skillsight_secret_2026
+      - key: PORT
+        value: 10000
