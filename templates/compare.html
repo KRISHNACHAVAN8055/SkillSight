@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compare Skills — SkillSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #1a1d2e; border-bottom: 1px solid #2d2d44; padding: 12px 0; }
+        .navbar-brand { color: #7c83fd !important; font-weight: 700; font-size: 1.4rem; }
+        .nav-link { color: #a0a3b1 !important; font-size: 0.9rem; }
+        .nav-link:hover { color: #fff !important; }
+        .card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; }
+        select { background: #1a1d2e; border: 1px solid #2d2d44; color: #fff; border-radius: 8px; padding: 10px 16px; width: 100%; }
+        select:focus { outline: none; border-color: #7c83fd; }
+        .btn-primary { background: #7c83fd; border: none; border-radius: 8px; padding: 11px 28px; font-weight: 600; }
+        .btn-primary:hover { background: #6670f0; }
+        a { color: #7c83fd; text-decoration: none; }
+        .user-tag { font-size: 0.82rem; color: #a0a3b1; }
+        .logout-link { font-size: 0.82rem; color: #f87171 !important; }
+        .stat-card { background: #12151f; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #2d2d44; }
+        .stat-card .val { font-size: 1.6rem; font-weight: 700; }
+        .stat-card .lbl { font-size: 0.7rem; color: #a0a3b1; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .winner-banner { border-radius: 10px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        .vs-divider { text-align: center; font-size: 1.5rem; font-weight: 700; color: #a0a3b1; padding: 8px 0; }
+        .skill-header-card { border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+        .progress-bar-custom { height: 8px; border-radius: 4px; background: #2d2d44; margin: 6px 0; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+        .tag { display: inline-block; background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 20px; padding: 2px 10px; font-size: 0.75rem; color: #a0a3b1; margin: 2px; }
+        .section-label { font-size: 0.72rem; color: #7c83fd; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container">
+        <span class="navbar-brand">SkillSight</span>
+        <div class="d-flex gap-3 align-items-center ms-auto">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/compare" class="nav-link" style="color:#7c83fd !important;">Compare</a>
+            <a href="/gap" class="nav-link">Skill Gap</a>
+            <a href="/resume" class="nav-link">Resume</a>
+            <a href="/trends" class="nav-link">Job Trends</a>
+            <span class="user-tag">{{ user_name }}</span>
+            <a href="/logout" class="nav-link logout-link">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <h4 style="color:#fff;" class="mb-1">Skill Comparison</h4>
+    <p style="color:#a0a3b1;" class="mb-4">Compare two skills side by side — trend lines, stats, salary, and a winner recommendation.</p>
+
+    <div class="card p-4 mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label style="color:#a0a3b1;font-size:0.82rem;margin-bottom:6px;">Skill 1</label>
+                <select id="skill1">
+                    {% for s in skills %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 text-center">
+                <div style="font-size:1.4rem;font-weight:700;color:#a0a3b1;padding-top:24px;">VS</div>
+            </div>
+            <div class="col-md-5">
+                <label style="color:#a0a3b1;font-size:0.82rem;margin-bottom:6px;">Skill 2</label>
+                <select id="skill2">
+                    {% for s in skills %}<option value="{{ s }}" {% if loop.index == 2 %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-primary" onclick="compareSkills()">Compare Now</button>
+        </div>
+    </div>
+
+    <div id="results" style="display:none;">
+        <!-- Winner Banner -->
+        <div id="winnerBanner" class="winner-banner mb-4"></div>
+
+        <!-- Stat Comparison -->
+        <div class="card p-4 mb-4">
+            <div style="font-size:0.95rem;font-weight:600;color:#fff;margin-bottom:16px;">Head-to-Head Stats</div>
+            <div id="statComparison"></div>
+        </div>
+
+        <!-- Trend Chart -->
+        <div class="card p-4 mb-4">
+            <div style="font-size:0.95rem;font-weight:600;color:#fff;margin-bottom:4px;">Demand Trend Comparison</div>
+            <div style="font-size:0.8rem;color:#a0a3b1;margin-bottom:12px;">Solid line = historical · Dashed = 6-month forecast</div>
+            <div id="compareChart" style="height:380px;"></div>
+        </div>
+
+        <!-- Detail Cards -->
+        <div class="row g-3 mb-5" id="detailCards"></div>
+    </div>
+</div>
+
+<script>
+const skillData = {{ skill_data | tojson }};
+
+function compareSkills() {
+    const s1name = document.getElementById('skill1').value;
+    const s2name = document.getElementById('skill2').value;
+    if (s1name === s2name) { alert('Please select two different skills.'); return; }
+
+    fetch(`/api/compare?skill1=${encodeURIComponent(s1name)}&skill2=${encodeURIComponent(s2name)}`)
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+        const s1 = data.skill1_info;
+        const s2 = data.skill2_info;
+        const c1 = '#7c83fd';
+        const c2 = '#f87171';
+
+        const catColor = s => s.category === 'Rising' ? '#4ade80' : s.category === 'Stable' ? '#60a5fa' : s.category === 'Declining' ? '#fbbf24' : '#f87171';
+
+        // Winner
+        const winner = s1.obsolescence_score < s2.obsolescence_score ? s1 : s2;
+        const loser = winner === s1 ? s2 : s1;
+        document.getElementById('winnerBanner').style.background = '#1a4a2e';
+        document.getElementById('winnerBanner').style.border = '1px solid #4ade80';
+        document.getElementById('winnerBanner').innerHTML = `
+            <div style="width:40px;height:40px;background:#4ade80;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">★</div>
+            <div>
+                <div style="font-weight:700;color:#4ade80;font-size:1rem;">${winner.skill} is the better skill to learn</div>
+                <div style="font-size:0.82rem;color:#a0a3b1;margin-top:2px;">Lower obsolescence score (${winner.obsolescence_score}) vs ${loser.skill} (${loser.obsolescence_score}) — ${winner.skill} has stronger market demand trajectory.</div>
+            </div>`;
+
+        // Stats comparison
+        const stats = [
+            { label: 'Obsolescence Score', v1: s1.obsolescence_score, v2: s2.obsolescence_score, lower_better: true, suffix: '' },
+            { label: 'Trend Slope', v1: s1.slope, v2: s2.slope, lower_better: false, suffix: '' },
+            { label: 'Category', v1: s1.category, v2: s2.category, lower_better: null, suffix: '' },
+            { label: 'Salary Range', v1: s1.salary, v2: s2.salary, lower_better: null, suffix: '' },
+            { label: 'Difficulty', v1: s1.difficulty, v2: s2.difficulty, lower_better: null, suffix: '' },
+            { label: 'Time to Learn', v1: s1.time_to_learn, v2: s2.time_to_learn, lower_better: null, suffix: '' },
+        ];
+
+        let statsHtml = '';
+        stats.forEach(st => {
+            let win1 = '', win2 = '';
+            if (st.lower_better === true) {
+                win1 = parseFloat(st.v1) < parseFloat(st.v2) ? '✓' : '';
+                win2 = parseFloat(st.v2) < parseFloat(st.v1) ? '✓' : '';
+            } else if (st.lower_better === false) {
+                win1 = parseFloat(st.v1) > parseFloat(st.v2) ? '✓' : '';
+                win2 = parseFloat(st.v2) > parseFloat(st.v1) ? '✓' : '';
+            }
+            statsHtml += `
+            <div style="display:grid;grid-template-columns:1fr 120px 1fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #2d2d44;">
+                <div style="text-align:right;">
+                    <span style="font-weight:600;color:${win1?'#4ade80':'#fff'};">${st.v1} ${win1?'<span style="color:#4ade80;font-size:0.8rem;">✓</span>':''}</span>
+                </div>
+                <div style="text-align:center;font-size:0.75rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:0.5px;">${st.label}</div>
+                <div>
+                    <span style="font-weight:600;color:${win2?'#4ade80':'#fff'};">${win2?'<span style="color:#4ade80;font-size:0.8rem;">✓</span>':''} ${st.v2}</span>
+                </div>
+            </div>`;
+        });
+
+        // Header row
+        document.getElementById('statComparison').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 120px 1fr;gap:12px;margin-bottom:8px;">
+                <div style="text-align:right;font-weight:700;color:${c1};">${s1name}</div>
+                <div></div>
+                <div style="font-weight:700;color:${c2};">${s2name}</div>
+            </div>
+            ${statsHtml}`;
+
+        // Chart
+        const d1 = data.skill1;
+        const d2 = data.skill2;
+        const s1fore_m = Object.keys(data.skill1_forecast);
+        const s1fore_v = Object.values(data.skill1_forecast);
+        const s2fore_m = Object.keys(data.skill2_forecast);
+        const s2fore_v = Object.values(data.skill2_forecast);
+        const last1m = d1.months[d1.months.length-1];
+        const last1v = d1.counts[d1.counts.length-1];
+        const last2m = d2.months[d2.months.length-1];
+        const last2v = d2.counts[d2.counts.length-1];
+
+        Plotly.newPlot('compareChart', [
+            { x: d1.months, y: d1.counts, mode: 'lines+markers', name: `${s1name} (historical)`, line: { color: c1, width: 2.5 }, marker: { size: 5 } },
+            { x: [last1m, ...s1fore_m], y: [last1v, ...s1fore_v], mode: 'lines', name: `${s1name} (forecast)`, line: { color: c1, width: 2, dash: 'dash' } },
+            { x: d2.months, y: d2.counts, mode: 'lines+markers', name: `${s2name} (historical)`, line: { color: c2, width: 2.5 }, marker: { size: 5 } },
+            { x: [last2m, ...s2fore_m], y: [last2v, ...s2fore_v], mode: 'lines', name: `${s2name} (forecast)`, line: { color: c2, width: 2, dash: 'dash' } }
+        ], {
+            paper_bgcolor: '#1a1d2e', plot_bgcolor: '#1a1d2e',
+            font: { color: '#e0e0e0', size: 11 },
+            margin: { l: 50, r: 20, t: 10, b: 50 },
+            xaxis: { gridcolor: '#2d2d44', title: 'Month' },
+            yaxis: { gridcolor: '#2d2d44', title: 'Demand per 100 jobs' },
+            legend: { bgcolor: '#1a1d2e' }
+        }, { responsive: true, displayModeBar: false });
+
+        // Detail cards
+        [s1, s2].forEach((sk, idx) => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
+            const cc = idx === 0 ? c1 : c2;
+            col.innerHTML = `
+                <div class="card p-4">
+                    <div style="font-size:1.1rem;font-weight:700;color:${cc};margin-bottom:4px;">${sk.skill}</div>
+                    <span style="background:${catColor(sk)+'22'};color:${catColor(sk)};border:1px solid ${catColor(sk)};padding:2px 10px;border-radius:20px;font-size:0.75rem;">${sk.category}</span>
+                    <div style="margin:14px 0 6px;">
+                        <div class="section-label">Why learn this</div>
+                        <div style="font-size:0.83rem;color:#c0c0c0;line-height:1.6;">${sk.why}</div>
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <div class="section-label">How to start</div>
+                        <div style="font-size:0.83rem;color:#c0c0c0;line-height:1.6;">${sk.learn}</div>
+                    </div>
+                    <div>
+                        <div class="section-label">Time to learn</div>
+                        <div style="font-size:0.83rem;color:#fbbf24;">${sk.time_to_learn}</div>
+                    </div>
+                </div>`;
+            document.getElementById('detailCards').appendChild(col);
+        });
+    });
+}
+</script>
+</body>
+</html>

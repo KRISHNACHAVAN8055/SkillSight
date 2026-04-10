@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Skill Gap — SkillSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #1a1d2e; border-bottom: 1px solid #2d2d44; }
+        .navbar-brand { color: #7c83fd !important; font-weight: 700; font-size: 1.4rem; }
+        .card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; }
+        textarea { background: #1a1d2e; border: 1px solid #2d2d44; color: #fff; border-radius: 8px; padding: 12px 16px; width: 100%; resize: vertical; }
+        textarea:focus { outline: none; border-color: #7c83fd; }
+        .btn-primary { background: #7c83fd; border: none; border-radius: 8px; padding: 12px 32px; font-size: 1rem; }
+        .btn-primary:hover { background: #6670f0; }
+        .btn-success { background: #1a4a2e; border: 1px solid #4ade80; color: #4ade80; border-radius: 8px; padding: 12px 24px; }
+        .btn-success:hover { background: #4ade80; color: #000; }
+        .badge-rising { background: #1a4a2e; color: #4ade80; border: 1px solid #4ade80; }
+        .badge-stable { background: #1a3a4a; color: #60a5fa; border: 1px solid #60a5fa; }
+        .badge-declining { background: #4a3a1a; color: #fbbf24; border: 1px solid #fbbf24; }
+        .badge-critical { background: #4a1a1a; color: #f87171; border: 1px solid #f87171; }
+        .result-card { background: #12151f; border: 1px solid #2d2d44; border-radius: 10px; padding: 18px; margin-bottom: 12px; }
+        .info-row { font-size: 0.85rem; color: #a0a3b1; margin-top: 8px; line-height: 1.7; }
+        .info-row span { color: #e0e0e0; }
+        .rec-card { background: #0f1117; border: 1px solid #2d2d44; border-radius: 10px; padding: 16px; margin-bottom: 10px; }
+        a { color: #7c83fd; text-decoration: none; }
+        .tag { display: inline-block; background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 20px; padding: 2px 10px; font-size: 0.75rem; color: #a0a3b1; margin-right: 4px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container">
+        <span class="navbar-brand">SkillSight</span>
+        <div class="d-flex gap-3 align-items-center">
+            <a href="/" class="nav-link text-light">Dashboard</a>
+            <a href="/compare" class="nav-link text-light">Compare</a>
+            <a href="/gap" class="nav-link text-light">Skill Gap</a>
+            <span style="color:#a0a3b1;font-size:0.85rem;">{{ user_name }}</span>
+            <a href="/logout" style="font-size:0.85rem;color:#f87171;">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="max-width:760px;">
+    <h4 style="color:#fff;" class="mb-1">My Skill Gap Analyzer</h4>
+    <p style="color:#a0a3b1;" class="mb-4">Enter your skills and get a personalized learning report with resources and timelines.</p>
+
+    <div class="card p-4 mb-4">
+        <label style="color:#a0a3b1;font-size:0.85rem;margin-bottom:8px;">Your Current Skills (comma separated)</label>
+        <textarea id="userSkills" rows="3" placeholder="e.g. Python, React, MySQL, Docker, Tableau, jQuery"></textarea>
+        <div style="font-size:0.78rem;color:#555;margin-top:6px;">Tip: Enter skills exactly as they appear — Python, React, AWS, Docker, etc.</div>
+        <button class="btn btn-primary mt-3" onclick="analyzeGap()">Analyze My Skills</button>
+    </div>
+
+    <div id="results" style="display:none;">
+        <!-- Summary -->
+        <div class="card p-4 mb-4" id="summary"></div>
+
+        <!-- Action buttons -->
+        <div class="d-flex gap-3 mb-4">
+<button class="btn btn-success" onclick="downloadPDF()">Download Report</button>
+        </div>
+
+        <!-- Skill breakdown -->
+        <h5 style="color:#fff;" class="mb-3">Your Skill Analysis</h5>
+        <div id="skillBreakdown"></div>
+
+        <!-- Recommendations -->
+        <h5 style="color:#fff;" class="mt-4 mb-3">Recommended Skills to Learn Next</h5>
+        <div id="recommendations"></div>
+    </div>
+</div>
+
+<script>
+let reportData = {};
+
+function analyzeGap() {
+    const input = document.getElementById('userSkills').value;
+    const skills = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    if (skills.length === 0) { alert('Please enter at least one skill.'); return; }
+
+    fetch('/api/gap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills })
+    })
+    .then(r => r.json())
+    .then(data => {
+        reportData = data;
+        document.getElementById('results').style.display = 'block';
+
+        const riskColor = data.overall_risk === 'High' ? '#f87171' :
+                          data.overall_risk === 'Medium' ? '#fbbf24' : '#4ade80';
+
+        document.getElementById('summary').innerHTML = `
+            <div style="font-size:1rem;font-weight:600;color:#fff;margin-bottom:16px;">Your Risk Summary</div>
+            <div class="row g-3 mb-3">
+                <div class="col-4 text-center">
+                    <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Skills Analyzed</div>
+                    <div style="font-size:2.2rem;font-weight:700;color:#fff;">${data.analyzed}</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Overall Risk</div>
+                    <div style="font-size:2.2rem;font-weight:700;color:${riskColor};">${data.overall_risk}</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Avg Score</div>
+                    <div style="font-size:2.2rem;font-weight:700;color:#fff;">${data.avg_score}</div>
+                </div>
+            </div>
+            <div style="padding:12px 16px;background:#0f1117;border-radius:8px;color:#a0a3b1;font-size:0.9rem;border-left:3px solid ${riskColor};">
+                ${data.summary_text}
+            </div>`;
+
+        let breakdownHTML = '';
+        data.skill_results.forEach(s => {
+            const color = s.category === 'Rising' ? '#4ade80' :
+                          s.category === 'Stable' ? '#60a5fa' :
+                          s.category === 'Declining' ? '#fbbf24' : '#f87171';
+            breakdownHTML += `
+                <div class="result-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong style="color:#fff;font-size:1rem;">${s.skill}</strong>
+                        <span class="badge badge-${s.category.toLowerCase()} px-3 py-1 rounded-pill">${s.category}</span>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <span style="font-size:0.82rem;color:#a0a3b1;">Obsolescence Score: </span>
+                        <span style="color:${color};font-weight:600;">${s.score}</span>
+                        <span style="font-size:0.82rem;color:#555;margin-left:12px;">slope: ${s.slope}</span>
+                    </div>
+                    <div class="info-row">
+                        <div><b style="color:#7c83fd;">Why this matters:</b> <span>${s.why}</span></div>
+                        <div style="margin-top:4px;"><b style="color:#7c83fd;">How to learn:</b> <span>${s.learn}</span></div>
+                        <div style="margin-top:4px;"><b style="color:#7c83fd;">Time to learn:</b> <span>${s.time}</span></div>
+                    </div>
+                </div>`;
+        });
+
+        if (data.not_found.length > 0) {
+            breakdownHTML += `<div style="font-size:0.82rem;color:#a0a3b1;margin-top:4px;">
+                Skills not found in database: ${data.not_found.join(', ')}
+            </div>`;
+        }
+        document.getElementById('skillBreakdown').innerHTML = breakdownHTML;
+let recHTML = '';
+        if (data.recommendations.length === 0) {
+            recHTML = '<div style="color:#a0a3b1;font-size:0.9rem;">Your skills are well-rounded! No urgent gaps detected.</div>';
+        } else {
+            data.recommendations.forEach(r => {
+                recHTML += `
+                    <div class="rec-card">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <strong style="color:#4ade80;font-size:1rem;">${r.skill}</strong>
+                            <div class="d-flex gap-2 align-items-center">
+                                ${r.reason ? `<span style="font-size:0.75rem;background:#1a1d2e;border:1px solid #2d2d44;color:#a0a3b1;padding:2px 10px;border-radius:20px;">${r.reason}</span>` : ''}
+                                <span style="font-size:0.8rem;color:#a0a3b1;">Score: ${r.score}</span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div><b style="color:#7c83fd;">Why learn this:</b> <span>${r.why}</span></div>
+                            <div style="margin-top:4px;"><b style="color:#7c83fd;">How to start:</b> <span>${r.learn}</span></div>
+                            <div style="margin-top:4px;"><b style="color:#7c83fd;">Time needed:</b> <span>${r.time}</span></div>
+                        </div>
+                    </div>`;
+            });
+        }
+        document.getElementById('recommendations').innerHTML = recHTML;
+
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+function downloadPDF() {
+    const d = reportData;
+    const riskColor = d.overall_risk === 'High' ? '#e74c3c' :
+                      d.overall_risk === 'Medium' ? '#f39c12' : '#27ae60';
+
+    let skillsHtml = '';
+    d.skill_results.forEach(s => {
+        const c = s.category === 'Rising' ? '#27ae60' :
+                  s.category === 'Stable' ? '#3498db' :
+                  s.category === 'Declining' ? '#f39c12' : '#e74c3c';
+        skillsHtml += `
+        <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:12px;">
+            <div style="margin-bottom:8px;">
+                <strong style="font-size:15px;">${s.skill}</strong>
+                <span style="background:${c};color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px;">${s.category}</span>
+                <span style="color:#888;font-size:12px;margin-left:8px;">Score: ${s.score}</span>
+            </div>
+            <div style="font-size:12px;color:#444;line-height:1.7;">
+                <div><b style="color:#5c6bc0;">Why this matters:</b> ${s.why}</div>
+                <div><b style="color:#5c6bc0;">How to learn:</b> ${s.learn}</div>
+                <div><b style="color:#5c6bc0;">Time to learn:</b> ${s.time}</div>
+            </div>
+        </div>`;
+    });
+
+    let recsHtml = '';
+    d.recommendations.forEach(r => {
+        recsHtml += `
+        <div style="background:#f0fff4;border:1px solid #c3e6cb;border-radius:8px;padding:14px;margin-bottom:12px;">
+            <div style="margin-bottom:8px;">
+                <strong style="font-size:15px;color:#27ae60;">${r.skill}</strong>
+                <span style="color:#888;font-size:12px;margin-left:8px;">Score: ${r.score}</span>
+                ${r.reason ? `<span style="background:#e8e8f0;color:#555;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px;">${r.reason}</span>` : ''}
+            </div>
+            <div style="font-size:12px;color:#444;line-height:1.7;">
+                <div><b style="color:#5c6bc0;">Why learn this:</b> ${r.why}</div>
+                <div><b style="color:#5c6bc0;">How to start:</b> ${r.learn}</div>
+                <div><b style="color:#5c6bc0;">Time needed:</b> ${r.time}</div>
+            </div>
+        </div>`;
+    });
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SkillSight Report</title>
+<style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 30px; color: #1a1a2e; }
+    @media print { body { padding: 10px; } .no-print { display: none; } }
+</style>
+</head>
+<body>
+    <div class="no-print" style="background:#7c83fd;color:#fff;padding:10px 20px;border-radius:8px;margin-bottom:20px;text-align:center;cursor:pointer;" onclick="window.print()">
+        Print / Save as PDF (Ctrl+P or Cmd+P)
+    </div>
+
+    <div style="background:#1a1d2e;color:#fff;padding:24px;border-radius:10px;margin-bottom:24px;">
+        <div style="font-size:26px;font-weight:bold;color:#7c83fd;">SkillSight</div>
+        <div style="font-size:13px;color:#a0a3b1;margin-top:4px;">AI-Driven Skill Obsolescence Predictor</div>
+        <div style="font-size:12px;color:#ccc;margin-top:6px;">Personalized Learning Report &nbsp;|&nbsp; Prepared for: <b>{{ user_name }}</b></div>
+    </div>
+
+    <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:20px;margin-bottom:24px;">
+        <div style="display:flex;gap:0;text-align:center;margin-bottom:16px;">
+            <div style="flex:1;border-right:1px solid #ddd;">
+                <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Skills Analyzed</div>
+                <div style="font-size:28px;font-weight:bold;">${d.analyzed}</div>
+            </div>
+            <div style="flex:1;border-right:1px solid #ddd;">
+                <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Overall Risk</div>
+                <div style="font-size:28px;font-weight:bold;color:${riskColor};">${d.overall_risk}</div>
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Avg Score</div>
+                <div style="font-size:28px;font-weight:bold;">${d.avg_score}</div>
+            </div>
+        </div>
+        <div style="background:#fff;border-left:4px solid ${riskColor};padding:10px 14px;border-radius:4px;font-size:13px;color:#555;">
+            ${d.summary_text}
+        </div>
+    </div>
+
+    <h2 style="border-bottom:2px solid #7c83fd;padding-bottom:8px;font-size:18px;">Your Skill Analysis</h2>
+    ${skillsHtml}
+
+    <h2 style="border-bottom:2px solid #7c83fd;padding-bottom:8px;font-size:18px;margin-top:28px;">Recommended Skills to Learn Next</h2>
+    ${recsHtml}
+
+    <div style="margin-top:30px;text-align:center;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:12px;">
+        Generated by SkillSight — AI-Driven Skill Obsolescence Predictor for Indian IT Market
+    </div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'SkillSight_Report.html';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login — SkillSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 420px; }
+        .brand { font-size: 1.8rem; font-weight: 700; color: #7c83fd; text-align: center; margin-bottom: 0.25rem; }
+        .brand-sub { text-align: center; color: #a0a3b1; font-size: 0.85rem; margin-bottom: 2rem; }
+        .form-label { color: #a0a3b1; font-size: 0.82rem; margin-bottom: 4px; }
+        .form-control { background: #12151f; border: 1px solid #2d2d44; color: #fff; border-radius: 8px; padding: 10px 14px; }
+        .form-control:focus { background: #12151f; border-color: #7c83fd; color: #fff; box-shadow: 0 0 0 3px rgba(124,131,253,0.15); }
+        .form-control::placeholder { color: #555; }
+        .btn-primary { background: #7c83fd; border: none; border-radius: 8px; padding: 11px; font-size: 0.95rem; font-weight: 600; width: 100%; margin-top: 0.5rem; }
+        .btn-primary:hover { background: #6670f0; }
+        .divider { text-align: center; color: #a0a3b1; font-size: 0.8rem; margin: 1.2rem 0; }
+        .link-text { text-align: center; font-size: 0.85rem; color: #a0a3b1; }
+        .link-text a { color: #7c83fd; text-decoration: none; font-weight: 600; }
+        .alert-danger { background: #4a1a1a; border: 1px solid #f87171; color: #f87171; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+<div class="auth-card">
+    <div class="brand">SkillSight</div>
+    <div class="brand-sub">AI-Driven Skill Obsolescence Predictor</div>
+
+    {% if error %}
+    <div class="alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+
+    <div class="divider">— or —</div>
+    <div class="link-text">Don't have an account? <a href="/signup">Create one free</a></div>
+</div>
+</body>
+</html>

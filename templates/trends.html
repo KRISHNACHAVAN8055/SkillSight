@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Trends — SkillSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #1a1d2e; border-bottom: 1px solid #2d2d44; padding: 12px 0; }
+        .navbar-brand { color: #7c83fd !important; font-weight: 700; font-size: 1.4rem; }
+        .nav-link { color: #a0a3b1 !important; font-size: 0.9rem; }
+        .nav-link:hover { color: #fff !important; }
+        .card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; }
+        a { color: #7c83fd; text-decoration: none; }
+        .user-tag { font-size: 0.82rem; color: #a0a3b1; }
+        .logout-link { font-size: 0.82rem; color: #f87171 !important; }
+        .trend-card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s, transform 0.2s; cursor: default; }
+        .trend-card:hover { border-color: #7c83fd; transform: translateY(-2px); }
+        .trend-rank { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .skill-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; margin: 3px; border: 1px solid; }
+        .demand-bar { height: 6px; border-radius: 3px; background: #2d2d44; margin: 8px 0 4px; }
+        .demand-fill { height: 100%; border-radius: 3px; }
+        .filter-btn { border: 1px solid #2d2d44; background: transparent; color: #a0a3b1; border-radius: 20px; padding: 5px 16px; margin: 3px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        .filter-btn.active, .filter-btn:hover { background: #7c83fd; color: #fff; border-color: #7c83fd; }
+        .hot-badge { background: #4a1a2e; color: #f472b6; border: 1px solid #f472b6; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; margin-left: 6px; }
+        .new-badge { background: #1a2e4a; color: #60a5fa; border: 1px solid #60a5fa; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; margin-left: 6px; }
+        .stat-mini { background: #12151f; border-radius: 6px; padding: 8px 12px; text-align: center; }
+        .stat-mini .v { font-size: 1.1rem; font-weight: 700; }
+        .stat-mini .l { font-size: 0.68rem; color: #a0a3b1; margin-top: 1px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container">
+        <span class="navbar-brand">SkillSight</span>
+        <div class="d-flex gap-3 align-items-center ms-auto">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/compare" class="nav-link">Compare</a>
+            <a href="/gap" class="nav-link">Skill Gap</a>
+            <a href="/resume" class="nav-link">Resume</a>
+            <a href="/trends" class="nav-link" style="color:#7c83fd !important;">Job Trends</a>
+            <span class="user-tag">{{ user_name }}</span>
+            <a href="/logout" class="nav-link logout-link">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="d-flex align-items-center gap-3 mb-1 flex-wrap">
+        <h4 style="color:#fff;margin:0;">Job Trends in Indian IT</h4>
+        <span style="font-size:0.78rem;background:#1a2e4a;color:#60a5fa;border:1px solid #60a5fa;padding:2px 10px;border-radius:20px;">Live Market Intelligence</span>
+    </div>
+    <p style="color:#a0a3b1;margin-bottom:20px;">Roles with highest demand growth, why they're trending, and what skills they need.</p>
+
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="card p-3 text-center"><div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Trending Roles</div><div style="font-size:2rem;font-weight:700;color:#7c83fd;">{{ trends|length }}</div></div></div>
+        <div class="col-6 col-md-3"><div class="card p-3 text-center"><div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Highest Salary</div><div style="font-size:1.3rem;font-weight:700;color:#4ade80;">₹45L+</div></div></div>
+        <div class="col-6 col-md-3"><div class="card p-3 text-center"><div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Hottest Domain</div><div style="font-size:1.3rem;font-weight:700;color:#f472b6;">AI/ML</div></div></div>
+        <div class="col-6 col-md-3"><div class="card p-3 text-center"><div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Avg Demand Growth</div><div style="font-size:1.3rem;font-weight:700;color:#fbbf24;">+34%</div></div></div>
+    </div>
+
+    <!-- Demand Chart -->
+    <div class="card p-4 mb-4">
+        <div style="font-size:0.95rem;font-weight:600;color:#fff;margin-bottom:12px;">Demand Score by Role</div>
+        <div id="demandChart" style="height:340px;"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-3">
+        <button class="filter-btn active" onclick="filterTrends('All',this)">All Roles</button>
+        <button class="filter-btn" onclick="filterTrends('AI/ML',this)">AI / ML</button>
+        <button class="filter-btn" onclick="filterTrends('Cloud',this)">Cloud</button>
+        <button class="filter-btn" onclick="filterTrends('Web',this)">Web Dev</button>
+        <button class="filter-btn" onclick="filterTrends('Data',this)">Data</button>
+        <button class="filter-btn" onclick="filterTrends('Mobile',this)">Mobile</button>
+    </div>
+
+    <!-- Trend Cards -->
+    <div id="trendCards"></div>
+</div>
+
+<script>
+const trends = {{ trends | tojson }};
+
+// Chart
+const sorted = [...trends].sort((a,b) => b.demand_score - a.demand_score);
+Plotly.newPlot('demandChart', [{
+    type: 'bar',
+    x: sorted.map(t => t.demand_score),
+    y: sorted.map(t => t.role),
+    orientation: 'h',
+    marker: { color: sorted.map(t => t.color) },
+    hovertemplate: '<b>%{y}</b><br>Demand Score: %{x}<extra></extra>'
+}], {
+    paper_bgcolor: '#1a1d2e', plot_bgcolor: '#1a1d2e',
+    font: { color: '#e0e0e0', size: 11 },
+    margin: { l: 160, r: 30, t: 10, b: 40 },
+    xaxis: { gridcolor: '#2d2d44', range: [0, 100], title: 'Demand Score' },
+    yaxis: { gridcolor: '#2d2d44' }
+}, { responsive: true, displayModeBar: false });
+
+function renderCards(filter) {
+    const container = document.getElementById('trendCards');
+    container.innerHTML = '';
+    trends.filter(t => filter === 'All' || t.domain === filter)
+          .forEach((t, i) => {
+        const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+        const rankBg = i < 3 ? rankColors[i] : '#2d2d44';
+        const rankColor = i < 3 ? '#000' : '#a0a3b1';
+
+        const skillTagsHtml = t.key_skills.map(s =>
+            `<span class="skill-tag" style="color:${t.color};border-color:${t.color}22;background:${t.color}11;">${s}</span>`
+        ).join('');
+
+        const whyHtml = t.why_trending.map(w =>
+            `<div style="display:flex;gap:8px;margin-bottom:6px;font-size:0.82rem;color:#c0c0c0;">
+                <span style="color:${t.color};flex-shrink:0;">▸</span>${w}
+            </div>`
+        ).join('');
+
+        container.innerHTML += `
+        <div class="trend-card" data-domain="${t.domain}">
+            <div class="d-flex gap-3 align-items-start">
+                <div class="trend-rank" style="background:${rankBg};color:${rankColor};">${i+1}</div>
+                <div style="flex:1;">
+                    <div class="d-flex align-items-center flex-wrap gap-1 mb-1">
+                        <span style="font-size:1.05rem;font-weight:700;color:#fff;">${t.role}</span>
+                        ${t.is_hot ? '<span class="hot-badge">HOT</span>' : ''}
+                        ${t.is_new ? '<span class="new-badge">EMERGING</span>' : ''}
+                        <span style="margin-left:auto;font-size:0.82rem;font-weight:600;color:#4ade80;">${t.salary}</span>
+                    </div>
+                    <div style="font-size:0.82rem;color:#a0a3b1;margin-bottom:10px;">${t.description}</div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-4"><div class="stat-mini"><div class="v" style="color:${t.color};">${t.demand_score}</div><div class="l">Demand Score</div></div></div>
+                        <div class="col-4"><div class="stat-mini"><div class="v" style="color:#4ade80;">+${t.growth}%</div><div class="l">YoY Growth</div></div></div>
+                        <div class="col-4"><div class="stat-mini"><div class="v" style="color:#fbbf24;">${t.openings}</div><div class="l">Openings</div></div></div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Why it's trending</div>
+                        ${whyHtml}
+                    </div>
+
+                    <div>
+                        <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Key skills required</div>
+                        ${skillTagsHtml}
+                    </div>
+
+                    <div style="margin-top:12px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#a0a3b1;margin-bottom:4px;">
+                            <span>Market demand</span><span>${t.demand_score}/100</span>
+                        </div>
+                        <div class="demand-bar"><div class="demand-fill" style="width:${t.demand_score}%;background:${t.color};"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    });
+}
+
+renderCards('All');
+
+function filterTrends(domain, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCards(domain);
+}
+</script>
+</body>
+</html>

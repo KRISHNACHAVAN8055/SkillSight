@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume Analyzer — SkillSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #1a1d2e; border-bottom: 1px solid #2d2d44; padding: 12px 0; }
+        .navbar-brand { color: #7c83fd !important; font-weight: 700; font-size: 1.4rem; }
+        .nav-link { color: #a0a3b1 !important; font-size: 0.9rem; }
+        .nav-link:hover { color: #fff !important; }
+        .card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; }
+        .upload-zone { border: 2px dashed #2d2d44; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #7c83fd; background: #12152a; }
+        .upload-icon { width: 56px; height: 56px; background: #12151f; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
+        .btn-primary { background: #7c83fd; border: none; border-radius: 8px; padding: 12px 32px; }
+        .btn-primary:hover { background: #6670f0; }
+        .btn-outline { background: transparent; border: 1px solid #2d2d44; color: #a0a3b1; border-radius: 8px; padding: 8px 20px; cursor: pointer; transition: all 0.2s; }
+        .btn-outline:hover { border-color: #7c83fd; color: #7c83fd; }
+        .badge-rising { background: #1a4a2e; color: #4ade80; border: 1px solid #4ade80; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
+        .badge-stable { background: #1a3a4a; color: #60a5fa; border: 1px solid #60a5fa; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
+        .badge-declining { background: #4a3a1a; color: #fbbf24; border: 1px solid #fbbf24; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
+        .badge-critical { background: #4a1a1a; color: #f87171; border: 1px solid #f87171; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
+        .skill-pill { display: inline-block; background: #12151f; border: 1px solid #2d2d44; border-radius: 20px; padding: 4px 12px; font-size: 0.82rem; margin: 3px; color: #e0e0e0; }
+        .role-card { background: #12151f; border: 1px solid #2d2d44; border-radius: 10px; padding: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
+        .role-card:hover { border-color: #7c83fd; }
+        .role-card.top-match { border-color: #4ade80; }
+        .match-bar { height: 6px; border-radius: 3px; background: #2d2d44; margin-top: 8px; }
+        .match-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #7c83fd, #4ade80); }
+        .roadmap-step { display: flex; gap: 16px; margin-bottom: 20px; }
+        .step-num { width: 36px; height: 36px; border-radius: 50%; background: #7c83fd; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .step-line { width: 2px; background: #2d2d44; margin: 0 auto; flex-shrink: 0; }
+        .step-content { background: #12151f; border: 1px solid #2d2d44; border-radius: 10px; padding: 14px; flex: 1; margin-bottom: 4px; }
+        .progress-ring { width: 80px; height: 80px; }
+        .section-title { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 1rem; border-bottom: 1px solid #2d2d44; padding-bottom: 8px; }
+        .stat-box { background: #12151f; border-radius: 8px; padding: 12px 16px; text-align: center; }
+        .stat-box .val { font-size: 1.8rem; font-weight: 700; }
+        .stat-box .lbl { font-size: 0.72rem; color: #a0a3b1; text-transform: uppercase; letter-spacing: 1px; }
+        .loading { display: none; text-align: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #2d2d44; border-top-color: #7c83fd; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        a { color: #7c83fd; text-decoration: none; }
+        .user-tag { font-size: 0.82rem; color: #a0a3b1; }
+        .logout-link { font-size: 0.82rem; color: #f87171 !important; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container">
+        <span class="navbar-brand">SkillSight</span>
+        <div class="d-flex gap-3 align-items-center ms-auto">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/compare" class="nav-link">Compare</a>
+            <a href="/gap" class="nav-link">Skill Gap</a>
+            <a href="/resume" class="nav-link" style="color:#7c83fd !important;">Resume</a>
+            <span class="user-tag">{{ user_name }}</span>
+            <a href="/logout" class="nav-link logout-link">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="max-width:900px;">
+
+    <!-- Upload Section -->
+    <div id="uploadSection">
+        <h4 style="color:#fff;" class="mb-1">Resume Analyzer</h4>
+        <p style="color:#a0a3b1;" class="mb-4">Upload your resume and get instant skill analysis, career role mapping, and a personalized learning roadmap.</p>
+
+        <div class="card p-4 mb-4">
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📄</div>
+                <div style="font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px;">Drop your resume here</div>
+                <div style="font-size:0.85rem;color:#a0a3b1;margin-bottom:16px;">Supports PDF and TXT files</div>
+                <button class="btn btn-primary" type="button">Choose File</button>
+                <input type="file" id="fileInput" accept=".pdf,.txt" style="display:none;" onchange="handleFile(this)">
+            </div>
+            <div id="fileName" style="text-align:center;margin-top:12px;font-size:0.85rem;color:#a0a3b1;display:none;"></div>
+            <div style="text-align:center;margin-top:16px;display:none;" id="analyzeBtn">
+                <button class="btn btn-primary" onclick="analyzeResume()">Analyze My Resume</button>
+            </div>
+        </div>
+
+        <!-- Or type manually -->
+        <div class="card p-4 mb-4">
+            <div class="section-title">Or paste your resume text directly</div>
+            <textarea id="resumeText" rows="6" style="background:#12151f;border:1px solid #2d2d44;color:#fff;border-radius:8px;padding:12px;width:100%;resize:vertical;" placeholder="Paste your resume content here..."></textarea>
+            <button class="btn btn-primary mt-3" onclick="analyzeText()">Analyze Text</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loadingSection">
+        <div class="spinner"></div>
+        <div style="color:#a0a3b1;">Analyzing your resume...</div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsSection" style="display:none;">
+
+        <!-- Summary Stats -->
+        <div class="row g-3 mb-4" id="summaryStats"></div>
+
+        <!-- Detected Skills -->
+        <div class="card p-4 mb-4">
+            <div class="section-title">Skills Detected in Your Resume</div>
+            <div id="detectedSkills"></div>
+        </div>
+
+        <!-- Missing Critical Skills -->
+        <div class="card p-4 mb-4">
+            <div class="section-title">Missing High-Demand Skills</div>
+            <p style="font-size:0.85rem;color:#a0a3b1;margin-bottom:12px;">These rising skills are NOT in your resume but are in high demand right now.</p>
+            <div id="missingSkills"></div>
+        </div>
+
+        <!-- Career Role Mapping -->
+        <div class="card p-4 mb-4">
+            <div class="section-title">Career Role Matches</div>
+            <p style="font-size:0.85rem;color:#a0a3b1;margin-bottom:12px;">Based on your skills, here are the best-fit roles and your match percentage.</p>
+            <div id="careerRoles"></div>
+        </div>
+
+        <!-- Skill Roadmap -->
+        <div class="card p-4 mb-5">
+            <div class="section-title">Your Personalized Skill Roadmap</div>
+            <p style="font-size:0.85rem;color:#a0a3b1;margin-bottom:20px;">Step-by-step learning path to reach your best career match.</p>
+            <div id="roadmapSteps"></div>
+        </div>
+
+        <!-- Download -->
+        <div class="text-center mb-5">
+            <button class="btn btn-primary" onclick="downloadResumeReport()">Download Full Report</button>
+            <button class="btn-outline ms-3" onclick="resetAnalyzer()">Analyze Another Resume</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let resumeData = {};
+let fileContent = '';
+
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+});
+
+function handleFile(input) {
+    if (input.files[0]) processFile(input.files[0]);
+}
+
+function processFile(file) {
+    document.getElementById('fileName').style.display = 'block';
+    document.getElementById('fileName').textContent = 'Selected: ' + file.name;
+    document.getElementById('analyzeBtn').style.display = 'block';
+
+    const reader = new FileReader();
+    reader.onload = e => { fileContent = e.target.result; };
+    reader.readAsText(file);
+}
+
+function analyzeResume() {
+    if (!fileContent) { alert('Please select a file first.'); return; }
+    sendForAnalysis(fileContent);
+}
+
+function analyzeText() {
+    const text = document.getElementById('resumeText').value.trim();
+    if (!text) { alert('Please paste your resume text.'); return; }
+    sendForAnalysis(text);
+}
+
+function sendForAnalysis(text) {
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('loadingSection').style.display = 'block';
+
+    fetch('/api/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    })
+    .then(r => r.json())
+    .then(data => {
+        resumeData = data;
+        document.getElementById('loadingSection').style.display = 'none';
+        document.getElementById('resultsSection').style.display = 'block';
+        renderResults(data);
+    })
+    .catch(() => {
+        alert('Analysis failed. Please try again.');
+        resetAnalyzer();
+    });
+}
+
+function renderResults(data) {
+    const riskColor = data.overall_risk === 'High' ? '#f87171' :
+                      data.overall_risk === 'Medium' ? '#fbbf24' : '#4ade80';
+
+    document.getElementById('summaryStats').innerHTML = `
+        <div class="col-6 col-md-3"><div class="stat-box"><div class="val" style="color:#7c83fd;">${data.detected_count}</div><div class="lbl">Skills Found</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-box"><div class="val" style="color:${riskColor};">${data.overall_risk}</div><div class="lbl">Risk Level</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-box"><div class="val" style="color:#4ade80;">${data.rising_count}</div><div class="lbl">Rising Skills</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-box"><div class="val" style="color:#f87171;">${data.critical_count}</div><div class="lbl">Critical Skills</div></div></div>`;
+
+    let skillsHtml = '';
+    data.detected_skills.forEach(s => {
+        const cat = s.category.toLowerCase();
+        skillsHtml += `<span class="skill-pill"><span class="badge-${cat}" style="margin-right:6px;">${s.category}</span>${s.skill}</span>`;
+    });
+    document.getElementById('detectedSkills').innerHTML = skillsHtml || '<p style="color:#a0a3b1;">No known skills detected.</p>';
+
+    let missingHtml = '';
+    data.missing_skills.forEach(s => {
+        missingHtml += `
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #2d2d44;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;"></div>
+            <div style="flex:1;">
+                <strong style="color:#fff;">${s.skill}</strong>
+                <span style="font-size:0.78rem;color:#a0a3b1;margin-left:8px;">Score: ${s.score}</span>
+            </div>
+            <span style="font-size:0.78rem;color:#a0a3b1;max-width:300px;text-align:right;">${s.why}</span>
+        </div>`;
+    });
+    document.getElementById('missingSkills').innerHTML = missingHtml || '<p style="color:#4ade80;">Great! You have all major high-demand skills.</p>';
+
+    let rolesHtml = '';
+    data.career_roles.forEach((r, i) => {
+        const isTop = i === 0;
+        rolesHtml += `
+        <div class="role-card ${isTop ? 'top-match' : ''}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    ${isTop ? '<span style="font-size:0.72rem;background:#1a4a2e;color:#4ade80;border:1px solid #4ade80;padding:2px 8px;border-radius:10px;margin-bottom:6px;display:inline-block;">Best Match</span><br>' : ''}
+                    <strong style="color:#fff;font-size:1rem;">${r.role}</strong>
+                    <div style="font-size:0.82rem;color:#a0a3b1;margin-top:3px;">${r.description}</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;margin-left:16px;">
+                    <div style="font-size:1.5rem;font-weight:700;color:${isTop ? '#4ade80' : '#7c83fd'};">${r.match}%</div>
+                    <div style="font-size:0.72rem;color:#a0a3b1;">match</div>
+                </div>
+            </div>
+            <div class="match-bar"><div class="match-fill" style="width:${r.match}%;background:${isTop ? '#4ade80' : '#7c83fd'};"></div></div>
+            <div style="margin-top:10px;font-size:0.8rem;color:#a0a3b1;">
+                <span style="color:#fff;font-weight:500;">Required skills: </span>${r.required_skills.join(', ')}
+            </div>
+            <div style="margin-top:4px;font-size:0.8rem;">
+                <span style="color:#a0a3b1;font-weight:500;">You are missing: </span>
+                <span style="color:#f87171;">${r.missing.length > 0 ? r.missing.join(', ') : 'Nothing! You qualify.'}</span>
+            </div>
+            <div style="margin-top:4px;font-size:0.8rem;color:#a0a3b1;">
+                Avg salary: <span style="color:#4ade80;font-weight:600;">${r.salary}</span>
+            </div>
+        </div>`;
+    });
+    document.getElementById('careerRoles').innerHTML = rolesHtml;
+
+    let roadmapHtml = '';
+    data.roadmap.forEach((step, i) => {
+        const isLast = i === data.roadmap.length - 1;
+        roadmapHtml += `
+        <div class="roadmap-step">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+                <div class="step-num">${i + 1}</div>
+                ${!isLast ? '<div style="width:2px;flex:1;background:#2d2d44;margin-top:4px;"></div>' : ''}
+            </div>
+            <div style="flex:1;padding-bottom:${isLast ? '0' : '8px'};">
+                <div class="step-content">
+                    <div style="font-weight:600;color:#fff;margin-bottom:4px;">${step.title}</div>
+                    <div style="font-size:0.82rem;color:#a0a3b1;margin-bottom:8px;">${step.description}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                        ${step.skills.map(s => `<span style="background:#1a1d2e;border:1px solid #7c83fd;color:#7c83fd;padding:2px 10px;border-radius:20px;font-size:0.75rem;">${s}</span>`).join('')}
+                    </div>
+                    <div style="margin-top:8px;font-size:0.78rem;color:#555;">
+                        Duration: <span style="color:#fbbf24;">${step.duration}</span>
+                        &nbsp;·&nbsp; Resources: <span style="color:#a0a3b1;">${step.resources}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    });
+    document.getElementById('roadmapSteps').innerHTML = roadmapHtml;
+}
+
+function resetAnalyzer() {
+    document.getElementById('uploadSection').style.display = 'block';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('loadingSection').style.display = 'none';
+    document.getElementById('fileName').style.display = 'none';
+    document.getElementById('analyzeBtn').style.display = 'none';
+    document.getElementById('resumeText').value = '';
+    fileContent = '';
+    resumeData = {};
+}
+
+function downloadResumeReport() {
+    const d = resumeData;
+    const riskColor = d.overall_risk === 'High' ? '#e74c3c' :
+                      d.overall_risk === 'Medium' ? '#f39c12' : '#27ae60';
+
+    let skillsHtml = d.detected_skills.map(s => {
+        const c = s.category === 'Rising' ? '#27ae60' : s.category === 'Stable' ? '#3498db' :
+                  s.category === 'Declining' ? '#f39c12' : '#e74c3c';
+        return `<span style="display:inline-block;background:#f8f9fa;border:1px solid #ddd;border-radius:20px;padding:3px 12px;margin:3px;font-size:12px;">
+            <span style="color:${c};font-weight:bold;">${s.category[0]}</span> ${s.skill}
+        </span>`;
+    }).join('');
+
+    let rolesHtml = d.career_roles.map((r, i) => `
+        <div style="background:${i===0?'#f0fff4':'#f8f9fa'};border:1px solid ${i===0?'#c3e6cb':'#ddd'};border-radius:8px;padding:14px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;">
+                <strong style="font-size:14px;">${r.role} ${i===0?'⭐':''}</strong>
+                <span style="font-weight:bold;color:${i===0?'#27ae60':'#5c6bc0'};">${r.match}% match</span>
+            </div>
+            <div style="font-size:11px;color:#666;margin-top:4px;">${r.description}</div>
+            <div style="font-size:11px;margin-top:6px;"><b>Missing:</b> <span style="color:#e74c3c;">${r.missing.length>0?r.missing.join(', '):'Nothing!'}</span></div>
+            <div style="font-size:11px;"><b>Salary:</b> <span style="color:#27ae60;">${r.salary}</span></div>
+        </div>`).join('');
+
+    let roadmapHtml = d.roadmap.map((step, i) => `
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#5c6bc0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;flex-shrink:0;">${i+1}</div>
+            <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:12px;flex:1;">
+                <div style="font-weight:bold;font-size:13px;">${step.title}</div>
+                <div style="font-size:11px;color:#666;margin-top:3px;">${step.description}</div>
+                <div style="font-size:11px;margin-top:5px;"><b>Skills:</b> ${step.skills.join(', ')}</div>
+                <div style="font-size:11px;color:#888;"><b>Duration:</b> ${step.duration} · <b>Resources:</b> ${step.resources}</div>
+            </div>
+        </div>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>SkillSight Resume Report</title>
+<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#1a1a2e;}@media print{.no-print{display:none;}}</style>
+</head><body>
+<div class="no-print" style="background:#7c83fd;color:#fff;padding:10px 20px;border-radius:8px;margin-bottom:20px;text-align:center;cursor:pointer;" onclick="window.print()">
+    Print / Save as PDF (Cmd+P)
+</div>
+<div style="background:#1a1d2e;color:#fff;padding:24px;border-radius:10px;margin-bottom:24px;">
+    <div style="font-size:24px;font-weight:bold;color:#7c83fd;">SkillSight</div>
+    <div style="font-size:13px;color:#a0a3b1;">Resume Analysis Report</div>
+</div>
+<div style="background:#f8f9fa;border-radius:10px;padding:16px;margin-bottom:20px;display:flex;gap:0;text-align:center;">
+    <div style="flex:1;border-right:1px solid #ddd;"><div style="font-size:10px;color:#888;text-transform:uppercase;">Skills Found</div><div style="font-size:24px;font-weight:bold;color:#5c6bc0;">${d.detected_count}</div></div>
+    <div style="flex:1;border-right:1px solid #ddd;"><div style="font-size:10px;color:#888;text-transform:uppercase;">Risk Level</div><div style="font-size:24px;font-weight:bold;color:${riskColor};">${d.overall_risk}</div></div>
+    <div style="flex:1;border-right:1px solid #ddd;"><div style="font-size:10px;color:#888;text-transform:uppercase;">Rising Skills</div><div style="font-size:24px;font-weight:bold;color:#27ae60;">${d.rising_count}</div></div>
+    <div style="flex:1;"><div style="font-size:10px;color:#888;text-transform:uppercase;">Critical Skills</div><div style="font-size:24px;font-weight:bold;color:#e74c3c;">${d.critical_count}</div></div>
+</div>
+<h2 style="border-bottom:2px solid #7c83fd;padding-bottom:6px;font-size:16px;">Detected Skills</h2>
+<div style="margin-bottom:20px;">${skillsHtml}</div>
+<h2 style="border-bottom:2px solid #7c83fd;padding-bottom:6px;font-size:16px;">Career Role Matches</h2>
+<div style="margin-bottom:20px;">${rolesHtml}</div>
+<h2 style="border-bottom:2px solid #7c83fd;padding-bottom:6px;font-size:16px;">Your Learning Roadmap</h2>
+${roadmapHtml}
+<div style="margin-top:20px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px;">
+    Generated by SkillSight — AI-Driven Skill Obsolescence Predictor
+</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'SkillSight_Resume_Report.html';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

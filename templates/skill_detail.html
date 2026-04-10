@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ skill.skill }} — SkillSight</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #1a1d2e; border-bottom: 1px solid #2d2d44; }
+        .navbar-brand { color: #7c83fd !important; font-weight: 700; font-size: 1.4rem; }
+        .card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; }
+        .badge-rising { background: #1a4a2e; color: #4ade80; border: 1px solid #4ade80; }
+        .badge-stable { background: #1a3a4a; color: #60a5fa; border: 1px solid #60a5fa; }
+        .badge-declining { background: #4a3a1a; color: #fbbf24; border: 1px solid #fbbf24; }
+        .badge-critical { background: #4a1a1a; color: #f87171; border: 1px solid #f87171; }
+        a { color: #7c83fd; text-decoration: none; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container">
+        <span class="navbar-brand">SkillSight</span>
+        <div class="d-flex gap-3">
+            <a href="/" class="nav-link text-light">Dashboard</a>
+            <a href="/compare" class="nav-link text-light">Compare Skills</a>
+            <a href="/gap" class="nav-link text-light">My Skill Gap</a>
+            <a href="/resume" class="nav-link">Resume</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="mb-3 d-inline-block">← Back to Dashboard</a>
+
+    <div class="d-flex align-items-center gap-3 mb-4 mt-2">
+        <h2 class="mb-0" style="color:#fff;">{{ skill.skill }}</h2>
+        <span class="badge badge-{{ skill.category|lower }} px-3 py-2 rounded-pill fs-6">
+            {{ skill.category }}
+        </span>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center">
+                <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Obsolescence Score</div>
+                <div style="font-size:2rem;font-weight:700;color:#fff;">{{ skill.obsolescence_score }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center">
+                <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Trend Slope</div>
+                <div style="font-size:2rem;font-weight:700;color:{% if skill.slope > 0 %}#4ade80{% else %}#f87171{% endif %};">
+                    {{ skill.slope }}
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center">
+                <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">Status</div>
+                <div style="font-size:1.5rem;font-weight:700;color:#fff;">{{ skill.category }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center">
+                <div style="font-size:0.7rem;color:#a0a3b1;text-transform:uppercase;letter-spacing:1px;">6-Month Forecast</div>
+                <div style="font-size:1.5rem;font-weight:700;color:#7c83fd;">Available</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend + Forecast Chart -->
+    <div class="card p-4 mb-4">
+        <div style="font-size:1.1rem;font-weight:600;color:#fff;margin-bottom:1rem;">
+            Historical Trend + 6-Month Forecast
+        </div>
+        <div id="trendChart" style="height:400px;"></div>
+    </div>
+
+    <!-- Forecast Table -->
+    <div class="card p-4 mb-5">
+        <div style="font-size:1.1rem;font-weight:600;color:#fff;margin-bottom:1rem;">
+            6-Month Forecast Values
+        </div>
+        <table class="table" style="color:#e0e0e0;">
+            <thead>
+                <tr>
+                    <th style="color:#a0a3b1;border-color:#2d2d44;">Month</th>
+                    <th style="color:#a0a3b1;border-color:#2d2d44;">Predicted Demand (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for month, val in forecast.items() %}
+                <tr style="border-color:#2d2d44;">
+                    <td>{{ month }}</td>
+                    <td>{{ val }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const historical_months = {{ historical_months | tojson }};
+const historical_counts = {{ historical_counts | tojson }};
+const forecast = {{ forecast | tojson }};
+const forecast_months = Object.keys(forecast);
+const forecast_values = Object.values(forecast);
+
+const lastHistMonth = historical_months[historical_months.length - 1];
+const lastHistVal = historical_counts[historical_counts.length - 1];
+
+Plotly.newPlot('trendChart', [
+    {
+        x: historical_months,
+        y: historical_counts,
+        mode: 'lines+markers',
+        name: 'Historical',
+        line: { color: '#7c83fd', width: 2.5 },
+        marker: { size: 6, color: '#7c83fd' }
+    },
+    {
+        x: [lastHistMonth, ...forecast_months],
+        y: [lastHistVal, ...forecast_values],
+        mode: 'lines+markers',
+        name: '6-Month Forecast',
+        line: { color: '#f87171', width: 2, dash: 'dash' },
+        marker: { size: 6, color: '#f87171' }
+    }
+], {
+    paper_bgcolor: '#1a1d2e',
+    plot_bgcolor: '#1a1d2e',
+    font: { color: '#e0e0e0' },
+    margin: { l: 60, r: 20, t: 10, b: 60 },
+    xaxis: { gridcolor: '#2d2d44', title: 'Month' },
+    yaxis: { gridcolor: '#2d2d44', title: 'Demand (per 100 jobs)' },
+    legend: { bgcolor: '#1a1d2e' }
+}, { responsive: true, displayModeBar: false });
+</script>
+</body>
+</html>
