@@ -4,6 +4,7 @@ import os
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import io
+from extensions import limiter
 
 bp = Blueprint('main', __name__)
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'skillsight.db')
@@ -240,6 +241,7 @@ def login_required(f):
 
 
 @bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     error = None
     if request.method == 'POST':
