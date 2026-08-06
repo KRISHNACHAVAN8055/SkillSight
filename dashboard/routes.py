@@ -1,10 +1,13 @@
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, session, make_response
 import sqlite3
+import re
 import os
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import io
 from extensions import limiter
+from PyPDF2 import PdfReader
+from docx import Document
 
 bp = Blueprint('main', __name__)
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'skillsight.db')
@@ -688,6 +691,37 @@ def resume():
     return render_template('resume.html', user_name=session.get('user_name', ''))
 
 
+@bp.route('/api/resume/upload', methods=['POST'])
+def api_resume_upload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    filename = file.filename.lower()
+    text = ''
+    try:
+        if filename.endswith('.pdf'):
+            reader = PdfReader(file)
+            for page in reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + '\n'
+        elif filename.endswith('.docx'):
+            doc = Document(file)
+            for para in doc.paragraphs:
+                text += para.text + '\n'
+        elif filename.endswith('.txt'):
+            text = file.read().decode('utf-8', errors='ignore')
+        else:
+            return jsonify({'error': 'Unsupported file type. Please upload PDF, DOCX, or TXT.'}), 400
+    except Exception as e:
+        return jsonify({'error': f'Could not read file: {str(e)}'}), 400
+    if not text.strip():
+        return jsonify({'error': 'Could not extract any text from this file. It may be a scanned/image-based document.'}), 400
+    return jsonify({'text': text})
+
+
 @bp.route('/api/resume', methods=['POST'])
 def api_resume():
     text = request.json.get('text', '')
@@ -702,7 +736,9 @@ def api_resume():
     detected_names = []
 
     for skill in ALL_SKILLS:
-        if skill.lower() in text_lower:
+        escaped = re.escape(skill.lower())
+        pattern = r'(?<![a-z0-9])' + escaped + r'(?![a-z0-9])'
+        if re.search(pattern, text_lower):
             cursor.execute('SELECT * FROM skill_forecasts WHERE LOWER(skill) = LOWER(?)', (skill,))
             row = cursor.fetchone()
             if row:

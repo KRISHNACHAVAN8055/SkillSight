@@ -139,6 +139,7 @@
 <script>
 let resumeData = {};
 let fileContent = '';
+let selectedFile = null;
 
 const uploadZone = document.getElementById('uploadZone');
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
@@ -159,14 +160,34 @@ function processFile(file) {
     document.getElementById('fileName').textContent = 'Selected: ' + file.name;
     document.getElementById('analyzeBtn').style.display = 'block';
 
-    const reader = new FileReader();
-    reader.onload = e => { fileContent = e.target.result; };
-    reader.readAsText(file);
+    selectedFile = file;
+    fileContent = null;
 }
 
 function analyzeResume() {
-    if (!fileContent) { alert('Please select a file first.'); return; }
-    sendForAnalysis(fileContent);
+    if (!selectedFile) { alert('Please select a file first.'); return; }
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('loadingSection').style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    fetch('/api/resume/upload', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('loadingSection').style.display = 'none';
+            return;
+        }
+        sendForAnalysis(data.text);
+    })
+    .catch(() => {
+        alert('File upload failed. Please try again.');
+        document.getElementById('uploadSection').style.display = 'block';
+        document.getElementById('loadingSection').style.display = 'none';
+    });
 }
 
 function analyzeText() {
