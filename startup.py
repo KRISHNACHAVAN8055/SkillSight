@@ -27,7 +27,7 @@ def check_and_seed():
     # Always ensure demo account exists
     cursor.execute('SELECT COUNT(*) FROM users WHERE email = ?', ('demo@skillsight.com',))
     if cursor.fetchone()[0] == 0:
-        hashed = generate_password_hash('demo1234')
+        hashed = generate_password_hash('demo1234', method='pbkdf2:sha256')
         cursor.execute('INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)',
                        ('Demo User', 'demo@skillsight.com', hashed))
         conn.commit()

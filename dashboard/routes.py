@@ -277,7 +277,7 @@ def signup():
             try:
                 conn = get_connection()
                 cursor = conn.cursor()
-                hashed = generate_password_hash(password)
+                hashed = generate_password_hash(password, method='pbkdf2:sha256')
                 cursor.execute('INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)',
                                (full_name, email, hashed))
                 conn.commit()
