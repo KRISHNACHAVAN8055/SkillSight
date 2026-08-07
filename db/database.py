@@ -45,6 +45,15 @@ def init_db():
             category TEXT,
             forecast_json TEXT
         );
+        CREATE TABLE IF NOT EXISTS resume_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            filename TEXT,
+            resume_text TEXT,
+            analysis_json TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        );
     ''')
     conn.commit()
     conn.close()

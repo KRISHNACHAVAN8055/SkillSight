@@ -726,6 +726,34 @@ def resume():
     return render_template('resume.html', user_name=session.get('user_name', ''))
 
 
+@bp.route('/history')
+@login_required
+def history():
+    conn = get_connection()
+    cursor = conn.cursor()
+    user_id = session.get('user_id')
+    cursor.execute(
+        'SELECT id, filename, analysis_json, created_at FROM resume_history WHERE user_id = ? ORDER BY created_at DESC',
+        (user_id,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    history_items = []
+    for row in rows:
+        analysis = json.loads(row['analysis_json'])
+        history_items.append({
+            'id': row['id'],
+            'filename': row['filename'],
+            'created_at': row['created_at'],
+            'avg_score': analysis.get('avg_score', 0),
+            'overall_risk': analysis.get('overall_risk', 'Unknown'),
+            'detected_count': len(analysis.get('detected_skills', []))
+        })
+
+    return render_template('history.html', user_name=session.get('user_name', ''), history=history_items)
+
+
 @bp.route('/api/resume/upload', methods=['POST'])
 def api_resume_upload():
     if 'file' not in request.files:
@@ -827,6 +855,23 @@ def api_resume():
         roadmap = ROADMAP_TEMPLATES['devops']
     else:
         roadmap = ROADMAP_TEMPLATES['general']
+
+    result = {
+        'detected_skills': detected_skills,
+        'missing_skills': missing_skills,
+        'career_roles': career_roles,
+        'roadmap': roadmap,
+        'avg_score': avg_score,
+        'overall_risk': overall_risk
+    }
+
+    user_id = session.get('user_id')
+    if user_id:
+        cursor.execute(
+            'INSERT INTO resume_history (user_id, filename, resume_text, analysis_json) VALUES (?, ?, ?, ?)',
+            (user_id, 'Resume Analysis', text[:5000], json.dumps(result))
+        )
+        conn.commit()
 
     conn.close()
     return jsonify({
