@@ -70,6 +70,25 @@
         </div>
     </div>
 
+    <!-- Score Explanation -->
+    <div class="card p-4 mb-4">
+        <div style="font-size:1.1rem;font-weight:600;color:#fff;margin-bottom:1rem;">
+            Why this score?
+        </div>
+        <div style="font-size:0.9rem;color:#c0c0c0;line-height:1.7;margin-bottom:12px;">
+            {{ explanation.trend_text }}
+        </div>
+        <div style="font-size:0.85rem;color:#a0a3b1;line-height:1.6;margin-bottom:12px;">
+            {{ explanation.formula_note }}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#12151f;border-radius:8px;border-left:3px solid {% if explanation.confidence == 'High' %}#4ade80{% elif explanation.confidence == 'Medium' %}#fbbf24{% else %}#f87171{% endif %};">
+            <span style="font-size:0.8rem;font-weight:700;color:{% if explanation.confidence == 'High' %}#4ade80{% elif explanation.confidence == 'Medium' %}#fbbf24{% else %}#f87171{% endif %};text-transform:uppercase;letter-spacing:1px;">
+                {{ explanation.confidence }} Confidence
+            </span>
+            <span style="font-size:0.82rem;color:#a0a3b1;">{{ explanation.confidence_note }}</span>
+        </div>
+    </div>
+
     <!-- Trend + Forecast Chart -->
     <div class="card p-4 mb-4">
         <div style="font-size:1.1rem;font-weight:600;color:#fff;margin-bottom:1rem;">

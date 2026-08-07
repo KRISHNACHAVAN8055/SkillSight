@@ -322,6 +322,39 @@ def index():
                            user_name=session.get('user_name', ''))
 
 
+def generate_score_explanation(skill, historical_counts):
+    slope = skill['slope']
+    score = skill['obsolescence_score']
+    category = skill['category']
+    data_points = len(historical_counts)
+
+    if data_points < 3:
+        confidence = "Low"
+        confidence_note = "Not enough historical data available yet for a reliable trend. This score may change significantly as more data is collected."
+    elif data_points < 6:
+        confidence = "Medium"
+        confidence_note = f"Based on {data_points} months of data. More historical data will improve accuracy over time."
+    else:
+        confidence = "High"
+        confidence_note = f"Based on {data_points} months of consistent market data."
+
+    if category == 'Rising':
+        trend_text = f"This skill's mentions in real job postings have been increasing (trend slope: {slope}). Demand is growing month over month."
+    elif category == 'Stable':
+        trend_text = f"This skill's demand has stayed roughly flat over time (trend slope: {slope}). Neither growing nor shrinking significantly."
+    elif category == 'Declining':
+        trend_text = f"This skill's mentions in job postings have been slowly decreasing (trend slope: {slope}). Worth monitoring, not yet urgent."
+    else:
+        trend_text = f"This skill's mentions in job postings have dropped sharply (trend slope: {slope}). Demand is fading quickly."
+
+    return {
+        'trend_text': trend_text,
+        'confidence': confidence,
+        'confidence_note': confidence_note,
+        'formula_note': "Score is calculated from the rate of change (slope) in how often this skill appears in real job postings each month, not a fixed opinion."
+    }
+
+
 @bp.route('/skill/<skill_name>')
 @login_required
 def skill_detail(skill_name):
@@ -339,9 +372,11 @@ def skill_detail(skill_name):
     historical_counts = [r['normalized_count'] for r in history]
     forecast = json.loads(skill['forecast_json'])
     resource = LEARNING_RESOURCES.get(skill_name, DEFAULT_RESOURCE)
+    explanation = generate_score_explanation(skill, historical_counts)
     return render_template('skill_detail.html', skill=skill,
                            historical_months=historical_months,
                            historical_counts=historical_counts,
+                           explanation=explanation,
                            forecast=forecast, resource=resource,
                            user_name=session.get('user_name', ''))
 
