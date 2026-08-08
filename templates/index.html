@@ -6,102 +6,107 @@
     <title>SkillSight — Skill Obsolescence Predictor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: #1a1d2e; border-bottom: 1px solid #2d2d44; padding: 12px 0; }
-        .navbar-brand { color: #7c83fd !important; font-weight: 700; font-size: 1.4rem; }
-        .nav-link { color: #a0a3b1 !important; font-size: 0.9rem; }
-        .nav-link:hover { color: #fff !important; }
-        .card { background: #1a1d2e; border: 1px solid #2d2d44; border-radius: 12px; }
-        .stat-label { color: #a0a3b1; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .stat-value { font-size: 2rem; font-weight: 700; color: #fff; }
-        .badge-rising { background: #1a4a2e; color: #4ade80; border: 1px solid #4ade80; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
-        .badge-stable { background: #1a3a4a; color: #60a5fa; border: 1px solid #60a5fa; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
-        .badge-declining { background: #4a3a1a; color: #fbbf24; border: 1px solid #fbbf24; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
-        .badge-critical { background: #4a1a1a; color: #f87171; border: 1px solid #f87171; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; }
-        .filter-btn { border: 1px solid #2d2d44; background: transparent; color: #a0a3b1; border-radius: 20px; padding: 5px 16px; margin: 3px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
-        .filter-btn.active, .filter-btn:hover { background: #7c83fd; color: #fff; border-color: #7c83fd; }
-        .search-box { background: #1a1d2e; border: 1px solid #2d2d44; color: #fff; border-radius: 8px; padding: 10px 16px; width: 100%; }
-        .search-box:focus { outline: none; border-color: #7c83fd; }
-        .search-box::placeholder { color: #555; }
-        .section-title { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 1rem; }
-        a { color: #7c83fd; text-decoration: none; }
-        a:hover { color: #a5aaff; }
-        .user-tag { font-size: 0.82rem; color: #a0a3b1; }
-        .logout-link { font-size: 0.82rem; color: #f87171 !important; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; letter-spacing: -0.011em; background: #f5f4f1; color: #2c2c2a; margin: 0; animation: fadeIn 0.35s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .navbar { background: #fdfdfb; border-bottom: 1px solid #e8e6e0; padding: 14px 0; }
+        .navbar-brand { color: #7873c4 !important; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; }
+        .nav-link { color: #8a8880 !important; font-size: 0.9rem; transition: color 0.18s ease; }
+        .nav-link:hover { color: #2c2c2a !important; }
+        .card { background: #fdfdfb; border: 1px solid #e8e6e0; border-radius: 12px; }
+        .stat-label { color: #8a8880; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: #2c2c2a; }
+        .badge-rising { background: #eaf3ee; color: #4d9873; border: 1px solid #c3ddd0; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .badge-stable { background: #eaeff5; color: #5b7ba3; border: 1px solid #c5d3e2; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .badge-declining { background: #f6efe3; color: #c08a3e; border: 1px solid #e6d3ae; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .badge-critical { background: #f7ece9; color: #c0605a; border: 1px solid #e0c3bc; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .filter-btn { border: 1px solid #e8e6e0; background: transparent; color: #8a8880; border-radius: 20px; padding: 5px 16px; margin: 3px; cursor: pointer; font-size: 0.85rem; transition: all 0.18s ease; }
+        .filter-btn.active, .filter-btn:hover { background: #7873c4; color: #fdfdfb; border-color: #7873c4; }
+        .search-box { background: #fdfdfb; border: 1px solid #e8e6e0; color: #2c2c2a; border-radius: 8px; padding: 10px 16px; width: 100%; transition: all 0.18s ease; }
+        .search-box:focus { outline: none; border-color: #7873c4; box-shadow: 0 0 0 3px rgba(120,115,196,0.1); }
+        .search-box::placeholder { color: #b0aea6; }
+        .section-title { font-size: 1rem; font-weight: 700; color: #2c2c2a; margin-bottom: 1rem; letter-spacing: -0.01em; }
+        a { color: #7873c4; text-decoration: none; }
+        a:hover { color: #665fb0; }
+        .user-tag { font-size: 0.82rem; color: #8a8880; }
+        .logout-link { font-size: 0.82rem; color: #c0605a !important; }
 
-        /* Side Panel */
+        .skill-card {
+            background: #fdfdfb; border: 1px solid #e8e6e0; border-radius: 10px; padding: 14px;
+            cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+        .skill-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border-color: #b8b3e0;
+        }
+        .skill-card:active { transform: translateY(0) scale(0.98); }
+
         .side-panel {
             position: fixed; top: 0; right: -480px; width: 460px; height: 100vh;
-            background: #1a1d2e; border-left: 1px solid #2d2d44;
+            background: #fdfdfb; border-left: 1px solid #e8e6e0;
             z-index: 1050; transition: right 0.35s cubic-bezier(.4,0,.2,1);
             overflow-y: auto; padding: 0;
         }
         .side-panel.open { right: 0; }
         .panel-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.5); z-index: 1040; display: none;
+            background: rgba(44,44,42,0.35); z-index: 1040; display: none;
         }
         .panel-overlay.open { display: block; }
-        .panel-header { background: #12151f; padding: 20px 24px; border-bottom: 1px solid #2d2d44; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; }
-        .panel-close { background: none; border: none; color: #a0a3b1; font-size: 1.4rem; cursor: pointer; padding: 0; line-height: 1; }
-        .panel-close:hover { color: #fff; }
+        .panel-header { background: #f5f4f1; padding: 20px 24px; border-bottom: 1px solid #e8e6e0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; }
+        .panel-close { background: none; border: none; color: #8a8880; font-size: 1.4rem; cursor: pointer; padding: 0; line-height: 1; transition: color 0.18s ease; }
+        .panel-close:hover { color: #2c2c2a; }
         .panel-body { padding: 24px; }
-        .mini-stat { background: #12151f; border-radius: 8px; padding: 12px; text-align: center; }
+        .mini-stat { background: #f5f4f1; border-radius: 8px; padding: 12px; text-align: center; }
         .mini-stat .v { font-size: 1.5rem; font-weight: 700; }
-        .mini-stat .l { font-size: 0.7rem; color: #a0a3b1; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-        .forecast-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #2d2d44; font-size: 0.85rem; }
+        .mini-stat .l { font-size: 0.7rem; color: #8a8880; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .forecast-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #e8e6e0; font-size: 0.85rem; }
         .forecast-row:last-child { border: none; }
-        .info-block { background: #12151f; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
-        .info-label { font-size: 0.72rem; color: #7c83fd; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 4px; }
-        .info-text { font-size: 0.85rem; color: #c0c0c0; line-height: 1.6; }
-        .score-bar-lg { height: 8px; border-radius: 4px; background: #2d2d44; margin: 8px 0; }
+        .info-block { background: #f5f4f1; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+        .info-label { font-size: 0.72rem; color: #7873c4; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 4px; }
+        .info-text { font-size: 0.85rem; color: #5a5a56; line-height: 1.6; }
+        .score-bar-lg { height: 8px; border-radius: 4px; background: #e8e6e0; margin: 8px 0; }
         .score-fill-lg { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
     </style>
 </head>
 <body>
 
-<!-- Overlay -->
 <div class="panel-overlay" id="overlay" onclick="closePanel()"></div>
 
-<!-- Side Panel -->
 <div class="side-panel" id="sidePanel">
     <div class="panel-header">
         <div>
-            <div id="panelSkillName" style="font-size:1.2rem;font-weight:700;color:#fff;"></div>
+            <div id="panelSkillName" style="font-size:1.2rem;font-weight:700;color:#2c2c2a;"></div>
             <div id="panelSkillBadge" style="margin-top:4px;"></div>
         </div>
         <button class="panel-close" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
-        <!-- Mini Stats -->
         <div class="row g-2 mb-4" id="panelStats"></div>
 
-        <!-- Score Bar -->
         <div class="mb-4">
             <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                <span style="font-size:0.82rem;color:#a0a3b1;">Obsolescence Score</span>
-                <span id="panelScoreNum" style="font-size:0.82rem;font-weight:600;color:#fff;"></span>
+                <span style="font-size:0.82rem;color:#8a8880;">Obsolescence Score</span>
+                <span id="panelScoreNum" style="font-size:0.82rem;font-weight:600;color:#2c2c2a;"></span>
             </div>
             <div class="score-bar-lg"><div class="score-fill-lg" id="panelScoreBar"></div></div>
-            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#555;margin-top:2px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#b0aea6;margin-top:2px;">
                 <span>0 — Rising</span><span>100 — Critical</span>
             </div>
         </div>
 
-        <!-- Trend Chart -->
         <div class="section-title" style="font-size:0.85rem;">Demand Trend + Forecast</div>
         <div id="panelChart" style="height:220px;margin-bottom:20px;"></div>
 
-        <!-- Forecast Table -->
         <div class="section-title" style="font-size:0.85rem;">6-Month Forecast</div>
         <div id="panelForecast" class="mb-4"></div>
 
-        <!-- Why + Learn -->
         <div id="panelLearn"></div>
 
-        <!-- Full Detail Button -->
-        <a id="panelFullLink" href="#" style="display:block;text-align:center;padding:12px;background:#7c83fd;color:#fff;border-radius:8px;font-weight:600;margin-top:8px;">
+        <a id="panelFullLink" href="#" style="display:block;text-align:center;padding:12px;background:#7873c4;color:#fdfdfb;border-radius:8px;font-weight:600;margin-top:8px;transition:background 0.18s ease;">
             View Full Detail Page →
         </a>
     </div>
@@ -111,11 +116,12 @@
     <div class="container">
         <span class="navbar-brand">SkillSight</span>
         <div class="d-flex gap-3 align-items-center ms-auto">
-            <a href="/" class="nav-link" style="color:#7c83fd !important;">Dashboard</a>
+            <a href="/" class="nav-link" style="color:#7873c4 !important;">Dashboard</a>
             <a href="/compare" class="nav-link">Compare</a>
             <a href="/gap" class="nav-link">Skill Gap</a>
             <a href="/resume" class="nav-link">Resume</a>
             <a href="/trends" class="nav-link">Job Trends</a>
+            <a href="/history" class="nav-link">History</a>
             <span class="user-tag">{{ user_name }}</span>
             <a href="/logout" class="nav-link logout-link">Logout</a>
         </div>
@@ -123,7 +129,6 @@
 </nav>
 
 <div class="container">
-    <!-- Stat Cards -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card p-3 text-center">
@@ -134,31 +139,29 @@
         <div class="col-6 col-md-3">
             <div class="card p-3 text-center">
                 <div class="stat-label">Rising</div>
-                <div class="stat-value" style="color:#4ade80;">{{ stats.rising }}</div>
+                <div class="stat-value" style="color:#4d9873;">{{ stats.rising }}</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card p-3 text-center">
                 <div class="stat-label">Declining</div>
-                <div class="stat-value" style="color:#fbbf24;">{{ stats.declining }}</div>
+                <div class="stat-value" style="color:#c08a3e;">{{ stats.declining }}</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card p-3 text-center">
                 <div class="stat-label">Critical</div>
-                <div class="stat-value" style="color:#f87171;">{{ stats.critical }}</div>
+                <div class="stat-value" style="color:#c0605a;">{{ stats.critical }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Chart -->
     <div class="card p-4 mb-4">
         <div class="section-title">Skill Obsolescence Scores — Click any bar to explore</div>
-        <div style="font-size:0.8rem;color:#a0a3b1;margin-bottom:12px;">Click any skill bar to see trend, forecast, and learning resources in a side panel.</div>
+        <div style="font-size:0.8rem;color:#8a8880;margin-bottom:12px;">Click any skill bar to see trend, forecast, and learning resources in a side panel.</div>
         <div id="barChart" style="height:500px;"></div>
     </div>
 
-    <!-- Search + Filter -->
     <div class="mb-3">
         <input class="search-box mb-2" type="text" id="searchBox" placeholder="Search any skill..." onkeyup="filterTable()">
         <div>
@@ -170,7 +173,6 @@
         </div>
     </div>
 
-    <!-- Skills Grid -->
     <div class="row g-3 mb-5" id="skillGrid"></div>
 </div>
 
@@ -179,9 +181,8 @@ const skills = {{ skills | tojson }};
 const resources = {{ resources | tojson }};
 
 const sorted = [...skills].sort((a,b) => a.obsolescence_score - b.obsolescence_score);
-const colorMap = s => s.category === 'Rising' ? '#4ade80' : s.category === 'Stable' ? '#60a5fa' : s.category === 'Declining' ? '#fbbf24' : '#f87171';
+const colorMap = s => s.category === 'Rising' ? '#4d9873' : s.category === 'Stable' ? '#5b7ba3' : s.category === 'Declining' ? '#c08a3e' : '#c0605a';
 
-// Bar Chart
 Plotly.newPlot('barChart', [{
     type: 'bar',
     x: sorted.map(s => s.obsolescence_score),
@@ -190,11 +191,11 @@ Plotly.newPlot('barChart', [{
     marker: { color: sorted.map(colorMap) },
     hovertemplate: '<b>%{y}</b><br>Score: %{x}<br><i>Click to explore</i><extra></extra>'
 }], {
-    paper_bgcolor: '#1a1d2e', plot_bgcolor: '#1a1d2e',
-    font: { color: '#e0e0e0', size: 11 },
+    paper_bgcolor: '#fdfdfb', plot_bgcolor: '#fdfdfb',
+    font: { color: '#2c2c2a', size: 11 },
     margin: { l: 130, r: 30, t: 10, b: 50 },
-    xaxis: { gridcolor: '#2d2d44', range: [0, 100], title: 'Obsolescence Score' },
-    yaxis: { gridcolor: '#2d2d44' },
+    xaxis: { gridcolor: '#e8e6e0', range: [0, 100], title: 'Obsolescence Score' },
+    yaxis: { gridcolor: '#e8e6e0' },
     clickmode: 'event'
 }, { responsive: true, displayModeBar: false });
 
@@ -203,7 +204,6 @@ document.getElementById('barChart').on('plotly_click', data => {
     openPanel(skillName);
 });
 
-// Skill Grid
 let currentCategory = 'All';
 function renderGrid(filter, search) {
     const grid = document.getElementById('skillGrid');
@@ -215,14 +215,14 @@ function renderGrid(filter, search) {
         const col = document.createElement('div');
         col.className = 'col-6 col-md-4 col-lg-3';
         col.innerHTML = `
-            <div onclick="openPanel('${s.skill}')" style="background:#1a1d2e;border:1px solid #2d2d44;border-radius:10px;padding:14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#7c83fd'" onmouseout="this.style.borderColor='#2d2d44'">
-                <div style="font-weight:600;color:#fff;font-size:0.9rem;margin-bottom:6px;">${s.skill}</div>
+            <div class="skill-card" onclick="openPanel('${s.skill}')">
+                <div style="font-weight:600;color:#2c2c2a;font-size:0.9rem;margin-bottom:6px;">${s.skill}</div>
                 <span class="badge-${s.category.toLowerCase()}">${s.category}</span>
                 <div style="margin-top:10px;">
-                    <div style="height:4px;border-radius:2px;background:#2d2d44;">
+                    <div style="height:4px;border-radius:2px;background:#e8e6e0;">
                         <div style="height:100%;border-radius:2px;width:${s.obsolescence_score}%;background:${colorMap(s)};"></div>
                     </div>
-                    <div style="font-size:0.72rem;color:#a0a3b1;margin-top:4px;">Score: ${s.obsolescence_score}</div>
+                    <div style="font-size:0.72rem;color:#8a8880;margin-top:4px;">Score: ${s.obsolescence_score}</div>
                 </div>
             </div>`;
         grid.appendChild(col);
@@ -241,7 +241,6 @@ function filterCategory(cat, btn) {
     filterTable();
 }
 
-// Side Panel
 function openPanel(skillName) {
     fetch(`/api/skill/${encodeURIComponent(skillName)}`)
     .then(r => r.json())
@@ -252,12 +251,11 @@ function openPanel(skillName) {
         document.getElementById('panelSkillBadge').innerHTML = `<span class="badge-${s.category.toLowerCase()}">${s.category}</span>`;
         document.getElementById('panelStats').innerHTML = `
             <div class="col-6"><div class="mini-stat"><div class="v" style="color:${color};">${s.obsolescence_score}</div><div class="l">Obs. Score</div></div></div>
-            <div class="col-6"><div class="mini-stat"><div class="v" style="color:${s.slope>0?'#4ade80':'#f87171'};">${s.slope}</div><div class="l">Slope</div></div></div>`;
+            <div class="col-6"><div class="mini-stat"><div class="v" style="color:${s.slope>0?'#4d9873':'#c0605a'};">${s.slope}</div><div class="l">Slope</div></div></div>`;
         document.getElementById('panelScoreNum').textContent = s.obsolescence_score + '/100';
         document.getElementById('panelScoreBar').style.width = s.obsolescence_score + '%';
         document.getElementById('panelScoreBar').style.background = color;
 
-        // Trend Chart
         const hist_m = data.historical_months;
         const hist_c = data.historical_counts;
         const fore = data.forecast;
@@ -266,25 +264,23 @@ function openPanel(skillName) {
         const lastM = hist_m[hist_m.length-1];
         const lastV = hist_c[hist_c.length-1];
         Plotly.newPlot('panelChart', [
-            { x: hist_m, y: hist_c, mode: 'lines+markers', name: 'Historical', line: { color: '#7c83fd', width: 2 }, marker: { size: 4 } },
-            { x: [lastM, ...fore_m], y: [lastV, ...fore_v], mode: 'lines+markers', name: 'Forecast', line: { color: '#f87171', width: 2, dash: 'dash' }, marker: { size: 4 } }
+            { x: hist_m, y: hist_c, mode: 'lines+markers', name: 'Historical', line: { color: '#7873c4', width: 2 }, marker: { size: 4 } },
+            { x: [lastM, ...fore_m], y: [lastV, ...fore_v], mode: 'lines+markers', name: 'Forecast', line: { color: '#c0605a', width: 2, dash: 'dash' }, marker: { size: 4 } }
         ], {
-            paper_bgcolor: '#12151f', plot_bgcolor: '#12151f',
-            font: { color: '#e0e0e0', size: 10 },
+            paper_bgcolor: '#f5f4f1', plot_bgcolor: '#f5f4f1',
+            font: { color: '#2c2c2a', size: 10 },
             margin: { l: 40, r: 10, t: 10, b: 40 },
-            xaxis: { gridcolor: '#2d2d44' }, yaxis: { gridcolor: '#2d2d44' },
-            legend: { bgcolor: '#12151f', font: { size: 10 } },
+            xaxis: { gridcolor: '#e8e6e0' }, yaxis: { gridcolor: '#e8e6e0' },
+            legend: { bgcolor: '#f5f4f1', font: { size: 10 } },
             showlegend: true
         }, { responsive: true, displayModeBar: false });
 
-        // Forecast Table
         let fHtml = '';
         fore_m.forEach((m, i) => {
-            fHtml += `<div class="forecast-row"><span style="color:#a0a3b1;">${m}</span><span style="color:#fff;font-weight:500;">${fore_v[i]}</span></div>`;
+            fHtml += `<div class="forecast-row"><span style="color:#8a8880;">${m}</span><span style="color:#2c2c2a;font-weight:500;">${fore_v[i]}</span></div>`;
         });
         document.getElementById('panelForecast').innerHTML = fHtml;
 
-        // Learn
         const res = data.resource;
         document.getElementById('panelLearn').innerHTML = `
             <div class="info-block">

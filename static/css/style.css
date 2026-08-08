@@ -1,0 +1,117 @@
+:root {
+  --bg-page: #f7f7f5;
+  --bg-card: #ffffff;
+  --border: #e5e5e0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b68;
+  --text-muted: #9c9c98;
+  --accent: #5b57d1;
+  --accent-hover: #4a47b0;
+  --success: #1a8f5c;
+  --success-bg: #e6f5ee;
+  --warning: #b5760a;
+  --warning-bg: #fbf1e0;
+  --danger: #c23b3b;
+  --danger-bg: #fbeaea;
+  --radius: 12px;
+  --transition: all 0.18s ease;
+}
+
+* { box-sizing: border-box; }
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  letter-spacing: -0.011em;
+}
+
+h1, h2, h3, h4, h5, .navbar-brand, .stat-value, .section-title {
+  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.navbar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+
+.navbar-brand {
+  color: var(--accent) !important;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.nav-link {
+  color: var(--text-secondary) !important;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.nav-link:hover {
+  color: var(--text-primary) !important;
+}
+
+.card, .history-card, .trend-card, .result-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+
+.card:hover, .history-card:hover, .trend-card:hover {
+  border-color: #d0d0ca;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.form-control, textarea, select {
+  background: #fdfdfc;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.form-control:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91,87,209,0.12);
+  background: #fff;
+}
+
+body {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.logout-link {
+  color: var(--danger) !important;
+}
