@@ -7,9 +7,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
+        :root {
+            --bg: #f5f4f1; --card: #fdfdfb; --border: #e8e6e0; --text: #2c2c2a;
+            --text-muted: #8a8880; --accent: #7873c4; --accent-hover: #665fb0;
+            --toggle-bg: #fdfdfb; --toggle-border: #e8e6e0; --input-bg: #f9f8f5;
+            --danger-bg: #f7ece9; --danger-border: #e0c3bc; --danger-text: #c0605a;
+        }
+        body[data-theme="dark"] {
+            --bg: #0f1117; --card: #1a1d2e; --border: #2d2d44; --text: #e0e0e0;
+            --text-muted: #a0a3b1; --accent: #7c83fd; --accent-hover: #6670f0;
+            --toggle-bg: #1a1d2e; --toggle-border: #2d2d44; --input-bg: #12151f;
+            --danger-bg: #4a1a1a; --danger-border: #6b2a2a; --danger-text: #f87171;
+        }
         body {
-            background: #f5f4f1;
-            color: #2c2c2a;
+            background: var(--bg);
+            color: var(--text);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             letter-spacing: -0.011em;
             min-height: 100vh;
@@ -18,37 +30,38 @@
             justify-content: center;
             margin: 0;
             animation: fadeIn 0.4s ease;
+            transition: background 0.25s ease, color 0.25s ease;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .auth-card {
-            background: #fdfdfb;
-            border: 1px solid #e8e6e0;
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 2.75rem;
             width: 100%;
             max-width: 400px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
-        .brand { font-size: 1.6rem; font-weight: 700; color: #2c2c2a; text-align: center; margin-bottom: 0.2rem; letter-spacing: -0.03em; }
-        .brand-sub { text-align: center; color: #8a8880; font-size: 0.85rem; margin-bottom: 2rem; }
-        .form-label { color: #8a8880; font-size: 0.82rem; margin-bottom: 6px; font-weight: 500; }
+        .brand { font-size: 1.6rem; font-weight: 700; color: var(--text); text-align: center; margin-bottom: 0.2rem; letter-spacing: -0.03em; }
+        .brand-sub { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
+        .form-label { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 6px; font-weight: 500; }
         .form-control {
-            background: #f9f8f5;
-            border: 1px solid #e8e6e0;
-            color: #2c2c2a;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
             border-radius: 8px;
             padding: 11px 14px;
             transition: all 0.18s ease;
         }
         .form-control:focus {
-            background: #fdfdfb;
-            border-color: #7873c4;
-            color: #2c2c2a;
+            background: var(--card);
+            border-color: var(--accent);
+            color: var(--text);
             box-shadow: 0 0 0 3px rgba(120,115,196,0.1);
         }
-        .form-control::placeholder { color: #b0aea6; }
+        .form-control::placeholder { color: var(--text-muted); }
         .btn-primary {
-            background: #7873c4;
+            background: var(--accent);
             border: none;
             border-radius: 8px;
             padding: 11px;
@@ -58,15 +71,15 @@
             margin-top: 0.5rem;
             transition: all 0.18s ease;
         }
-        .btn-primary:hover { background: #665fb0; transform: translateY(-1px); }
-        .divider { text-align: center; color: #b0aea6; font-size: 0.8rem; margin: 1.3rem 0; }
-        .link-text { text-align: center; font-size: 0.85rem; color: #8a8880; }
-        .link-text a { color: #7873c4; text-decoration: none; font-weight: 600; }
-        .link-text a:hover { color: #665fb0; }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .divider { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 1.3rem 0; }
+        .link-text { text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+        .link-text a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .link-text a:hover { color: var(--accent-hover); }
         .alert-danger {
-            background: #f7ece9;
-            border: 1px solid #e0c3bc;
-            color: #c0605a;
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger-text);
             border-radius: 8px;
             padding: 10px 14px;
             font-size: 0.85rem;
@@ -98,5 +111,6 @@
     <div class="divider">— or —</div>
     <div class="link-text">Don't have an account? <a href="/signup">Create one free</a></div>
 </div>
+<script src="/static/js/theme-toggle.js"></script>
 </body>
 </html>
